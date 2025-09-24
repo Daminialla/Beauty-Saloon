@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Payment • Rose & Velvet</title>
+  <script>window.dataLayer = window.dataLayer || []; dataLayer.push({page:'payment',event:'page_view'});</script>
+  <style>
+    :root{--accent:#d63384;--muted:#6b6b7a}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui;background:#fff6fb;color:#111}
+    .wrap{max-width:680px;margin:28px auto;padding:18px}
+    .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 12px 30px rgba(16,24,40,0.06)}
+    label{display:block;font-size:13px;margin-top:10px;color:var(--muted)}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #eee;margin-top:6px}
+    button{margin-top:14px;padding:12px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#b02364);color:#fff;border:none;cursor:pointer}
+    .summary{display:flex;gap:12px;align-items:center}
+    .summary img{width:96px;height:76px;border-radius:8px;object-fit:cover}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Payment</h2>
+    <div class="card">
+      <div id="orderSummary" class="summary">Loading…</div>
+
+      <form id="payForm">
+        <label>Card Number<input id="card" placeholder="1234 5678 9012 3456" required /></label>
+        <label>Expiry Date<input id="exp" placeholder="MM/YY" required maxlength="5" /></label>
+        <label>CVV<input id="cvv" placeholder="123" required maxlength="4" /></label>
+        <button type="submit">Proceed to Pay</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const sel = JSON.parse(localStorage.getItem('rv_selected_service') || 'null');
+    const user = JSON.parse(localStorage.getItem('rv_user') || 'null');
+    const summary = document.getElementById('orderSummary');
+    if(!sel){ summary.innerHTML = '<div style="color:#ff4d4f">No service in cart — <a href="index.html">Book now</a></div>'; }
+    else{
+      summary.innerHTML = `<img src="${sel.img}" alt="${sel.name}"/><div><div style="font-weight:700">${sel.name}</div><div style="color:var(--muted)">${user?user.fullname+' • ':''}Price: ₹${sel.price}</div></div>`;
+    }
+
+    // simple formatting for card
+    document.getElementById('card').addEventListener('input', (e)=>{ let v=e.target.value.replace(/\D/g,'').slice(0,16); e.target.value = v.replace(/(\d{4})/g,'$1 ').trim(); });
+
+    document.getElementById('payForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      if(!sel){ alert('No service selected'); return; }
+      const txn = 'RV' + Date.now();
+      // GA4/GTM purchase event
+      dataLayer.push({event:'purchase', ecommerce:{transaction_id:txn, value:sel.price, currency:'INR', items:[{item_id:sel.id,item_name:sel.name,price:sel.price}]}});
+      // store last order
+      localStorage.setItem('rv_last_order', JSON.stringify({txn, product: sel, amount: sel.price}));
+      // remove selected to simulate cart clear
+      localStorage.removeItem('rv_selected_service');
+      // navigate
+      window.location.href = 'thankyou.html';
+    });
+
+    dataLayer.push({event:'payment_page_view'});
+  </script>
+</body>
+</html>
