@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking • Rose & Velvet</title>
+  <script>window.dataLayer = window.dataLayer || []; dataLayer.push({page:'form',event:'page_view'});</script>
+  <style>
+    :root{--accent:#d63384;--muted:#6b6b7a}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui;background:#fff6fb;color:#111}
+    .wrap{max-width:980px;margin:28px auto;padding:18px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 12px 30px rgba(16,24,40,0.06)}
+    label{display:block;font-size:13px;margin-top:10px;color:var(--muted)}
+    input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #eee;margin-top:6px}
+    button{margin-top:14px;padding:12px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#b02364);color:#fff;border:none;cursor:pointer}
+    .mini{display:flex;gap:12px;align-items:center}
+    .mini img{width:84px;height:70px;border-radius:8px;object-fit:cover}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Complete your booking</h2>
+    <div class="grid">
+      <div class="card">
+        <form id="bookingForm">
+          <label>Full Name<input id="fullname" required /></label>
+          <label>Email<input id="email" type="email" required /></label>
+          <label>Address / Notes<textarea id="address" rows="3"></textarea></label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button type="submit">Proceed to Payment</button>
+            <button type="button" id="backShop" style="background:#f3f4f6;color:#111">Choose another</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="card">
+        <h3>Your selection</h3>
+        <div id="selected" class="mini">Loading…</div>
+        <div id="price" style="color:var(--muted);margin-top:10px"></div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const sel = JSON.parse(localStorage.getItem('rv_selected_service') || 'null');
+    const selectedDiv = document.getElementById('selected');
+    const priceDiv = document.getElementById('price');
+    if(!sel){
+      selectedDiv.innerHTML = '<div style="color:#ff4d4f">No service selected — <a href="index.html">Browse services</a></div>';
+    } else {
+      selectedDiv.innerHTML = `<img src="${sel.img}" alt="${sel.name}"/><div><div style="font-weight:700">${sel.name}</div><div style="color:var(--muted)">${sel.desc}</div></div>`;
+      priceDiv.textContent = `Price: ₹${sel.price}`;
+      dataLayer.push({event:'view_item',ecommerce:{items:[{item_id:sel.id,item_name:sel.name,price:sel.price}]}});
+    }
+
+    // prefill user details if available
+    const savedUser = JSON.parse(localStorage.getItem('rv_user') || 'null');
+    if(savedUser){ document.getElementById('fullname').value = savedUser.fullname || ''; document.getElementById('email').value = savedUser.email || ''; document.getElementById('address').value = savedUser.address || ''; }
+
+    document.getElementById('bookingForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      if(!sel){ alert('No service selected.'); return; }
+      const user = { fullname: this.fullname.value.trim(), email: this.email.value.trim(), address: this.address.value.trim() };
+      localStorage.setItem('rv_user', JSON.stringify(user));
+      dataLayer.push({event:'begin_checkout', ecommerce:{items:[{item_id:sel.id,item_name:sel.name,price:sel.price}]}});
+      window.location.href = 'payment.html';
+    });
+
+    document.getElementById('backShop').addEventListener('click', ()=>window.location.href='index.html');
+
+    dataLayer.push({event:'form_page_view'});
+  </script>
+</body>
+</html>
